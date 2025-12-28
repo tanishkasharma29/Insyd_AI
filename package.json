@@ -12,7 +12,8 @@
     "prisma:studio": "prisma studio",
     "test:api": "node test-api.js",
     "test:api:full": "node test-api-full.js",
-    "check:server": "node start-server.js"
+    "check:server": "node start-server.js",
+    "postinstall": "prisma generate"
   },
   "keywords": [
     "inventory",

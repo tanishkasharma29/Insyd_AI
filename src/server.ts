@@ -14,8 +14,8 @@ app.use(express.json());
 
 // Health check
 app.get("/health", (req: Request, res: Response) => {
-  res.json({ 
-    status: "ok", 
+  res.json({
+    status: "ok",
     message: "Inventory Management API is running",
     timestamp: new Date().toISOString(),
   });
@@ -25,7 +25,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.get("/api/health", async (req: Request, res: Response) => {
   try {
     const dbStatus = await testDatabaseConnection();
-    
+
     res.json({
       status: "ok",
       message: "Inventory Management API is running",
@@ -65,10 +65,12 @@ app.use((err: Error, req: Request, res: Response, next: Function) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Inventory Management API ready`);
-});
+// Only start server if not in serverless environment (Vercel)
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Inventory Management API ready`);
+  });
+}
 
 export default app;
-

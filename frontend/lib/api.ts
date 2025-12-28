@@ -1,11 +1,14 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Use relative URL in production (same domain), absolute URL in development
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" ? "/api" : "http://localhost:5000/api");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -30,7 +33,7 @@ export interface InventoryItem {
   minThreshold: number;
   unitCostPrice: number;
   unitSellingPrice: number;
-  status: 'SAFE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK' | 'DEAD_STOCK';
+  status: "SAFE" | "LOW" | "CRITICAL" | "OUT_OF_STOCK" | "DEAD_STOCK";
   isDeadStock: boolean;
   storageLocation?: string;
   lastSoldAt?: string;
@@ -80,7 +83,7 @@ export interface PendingOrder {
 export const api = {
   // Dashboard
   getDashboardStats: async (): Promise<DashboardStats> => {
-    const response = await apiClient.get('/dashboard/stats');
+    const response = await apiClient.get("/dashboard/stats");
     return response.data.data;
   },
 
@@ -90,7 +93,7 @@ export const api = {
     status?: string;
     search?: string;
   }): Promise<InventoryListResponse> => {
-    const response = await apiClient.get('/inventory', { params });
+    const response = await apiClient.get("/inventory", { params });
     return response.data;
   },
 
@@ -100,11 +103,14 @@ export const api = {
   },
 
   createInventory: async (data: CreateInventoryRequest) => {
-    const response = await apiClient.post('/inventory', data);
+    const response = await apiClient.post("/inventory", data);
     return response.data;
   },
 
-  updateInventory: async (sku: string, data: Partial<CreateInventoryRequest>) => {
+  updateInventory: async (
+    sku: string,
+    data: Partial<CreateInventoryRequest>
+  ) => {
     const response = await apiClient.patch(`/inventory/${sku}`, data);
     return response.data;
   },
@@ -115,8 +121,12 @@ export const api = {
   },
 
   // Orders
-  getPendingOrders: async (): Promise<{ success: boolean; count: number; data: PendingOrder[] }> => {
-    const response = await apiClient.get('/orders/pending');
+  getPendingOrders: async (): Promise<{
+    success: boolean;
+    count: number;
+    data: PendingOrder[];
+  }> => {
+    const response = await apiClient.get("/orders/pending");
     return response.data;
   },
 
@@ -129,15 +139,17 @@ export const api = {
     unitCostPrice?: number;
     notes?: string;
   }) => {
-    const response = await apiClient.post('/orders', data);
+    const response = await apiClient.post("/orders", data);
     return response.data;
   },
 
-  reconcileOrder: async (orderId: string, data?: { actualQuantity?: number; notes?: string }) => {
+  reconcileOrder: async (
+    orderId: string,
+    data?: { actualQuantity?: number; notes?: string }
+  ) => {
     const response = await apiClient.delete(`/orders/${orderId}`, { data });
     return response.data;
   },
 };
 
 export default apiClient;
-
