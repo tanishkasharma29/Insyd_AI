@@ -1,0 +1,116 @@
+// Prisma Schema for Inventory Management System
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Supplier/Vendor Table
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  contact     String?
+  email       String?
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    Product[]
+  pendingOrders PendingOrder[]
+
+  @@map("suppliers")
+}
+
+// Products Table - Core SKU information
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  sku               String   @unique // Stock Keeping Unit - must be unique
+  category          String   // e.g., "flooring", "lighting", "paints"
+  unitCostPrice     Decimal  @db.Decimal(10, 2) // Cost Price (CP)
+  unitSellingPrice  Decimal  @db.Decimal(10, 2) // Selling Price
+  supplierId        String
+  minThreshold      Int      @default(10) // Reorder level / Low stock threshold
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  supplier          Supplier   @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  inventory         Inventory?
+  auditLogs         AuditLog[]
+  pendingOrders     PendingOrder[]
+
+  @@index([sku])
+  @@index([category])
+  @@map("products")
+}
+
+// Inventory Table - Current stock levels and location
+model Inventory {
+  id                      String    @id @default(uuid())
+  productId               String    @unique // One inventory entry per product
+  currentQuantity         Int       @default(0)
+  storageLocation         String?   // e.g., "Warehouse A", "Aisle 4, Shelf B"
+  lastCheckedDate         DateTime? // Last physical verification
+  expiryDate              DateTime? // For perishable items
+  routineCheckPeriodDays  Int?      // Days between routine checks
+  lastRestockedAt         DateTime? // Last time stock was added
+  lastSoldAt              DateTime? // Last sale date (for dead stock detection)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  product                 Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([currentQuantity])
+  @@index([lastSoldAt])
+  @@map("inventory")
+}
+
+// Audit Logs Table - Complete history of all inventory movements
+model AuditLog {
+  id          String   @id @default(uuid())
+  sku         String
+  productId   String
+  changeAmount Int     // Positive for stock-in, negative for stock-out
+  reason      String   // "Sale", "Damage", "Return", "Restock", "Adjustment"
+  timestamp   DateTime @default(now())
+  vendorName  String?  // Supplier name (for restocks)
+  sellerName  String?  // Seller name (for sales)
+  customerName String? // Customer name (for sales)
+  notes       String?  // Additional context
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([sku])
+  @@index([timestamp])
+  @@index([reason])
+  @@map("audit_logs")
+}
+
+// Pending Orders Table - Purchase orders before stock arrives
+model PendingOrder {
+  id            String   @id @default(uuid())
+  productId     String
+  sku           String
+  quantity      Int
+  expectedDate  DateTime
+  status        String   @default("PENDING") // "PENDING" | "RECEIVED" | "CANCELLED"
+  supplierId    String
+  unitCostPrice Decimal? @db.Decimal(10, 2) // May differ from product's base cost
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  receivedAt    DateTime? // Timestamp when order was marked as received
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier      Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([expectedDate])
+  @@map("pending_orders")
+}
+
