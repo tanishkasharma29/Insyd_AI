@@ -3,6 +3,7 @@ import cors from "cors";
 import inventoryRoutes from "./routes/inventory.routes";
 import orderRoutes from "./routes/order.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import { testDatabaseConnection } from "./utils/db";
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -23,7 +24,6 @@ app.get("/health", (req: Request, res: Response) => {
 // API health check (includes database status)
 app.get("/api/health", async (req: Request, res: Response) => {
   try {
-    const { testDatabaseConnection } = await import("./utils/db");
     const dbStatus = await testDatabaseConnection();
     
     res.json({

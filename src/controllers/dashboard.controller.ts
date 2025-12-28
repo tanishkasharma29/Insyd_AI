@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getPrismaClient } from "../utils/db";
+import { handleDatabaseError } from "../utils/errorHandler";
 
 const prisma = getPrismaClient();
 
@@ -106,14 +107,9 @@ export const getDashboardStats = async (
   } catch (error: any) {
     console.error("Error in getDashboardStats:", error);
     
-    // Handle Prisma database connection errors
-    if (error?.code === "P1001" || error?.code === "P1000") {
-      res.status(503).json({
-        success: false,
-        error: "Database connection error",
-        details: "Cannot connect to database. Please check DATABASE_URL in .env file and ensure the database is running.",
-      });
-      return;
+    // Handle database connection errors
+    if (handleDatabaseError(error, res)) {
+      return; // Error was handled
     }
     
     res.status(500).json({

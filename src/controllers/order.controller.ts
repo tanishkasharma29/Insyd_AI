@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../utils/db";
+import { handleDatabaseError } from "../utils/errorHandler";
 import { OrderReconciliationRequest, CreateOrderRequest } from "../types";
 
 const prisma = getPrismaClient();
@@ -127,14 +128,9 @@ export const createOrder = async (
   } catch (error: any) {
     console.error("Error in createOrder:", error);
     
-    // Handle Prisma database connection errors
-    if (error?.code === "P1001" || error?.code === "P1000") {
-      res.status(503).json({
-        success: false,
-        error: "Database connection error",
-        details: "Cannot connect to database. Please check DATABASE_URL in .env file.",
-      });
-      return;
+    // Handle database connection errors
+    if (handleDatabaseError(error, res)) {
+      return; // Error was handled
     }
     
     res.status(500).json({
@@ -308,14 +304,9 @@ export const reconcileOrder = async (
   } catch (error: any) {
     console.error("Error in reconcileOrder:", error);
     
-    // Handle Prisma database connection errors
-    if (error?.code === "P1001" || error?.code === "P1000") {
-      res.status(503).json({
-        success: false,
-        error: "Database connection error",
-        details: "Cannot connect to database. Please check DATABASE_URL in .env file.",
-      });
-      return;
+    // Handle database connection errors
+    if (handleDatabaseError(error, res)) {
+      return; // Error was handled
     }
     
     res.status(500).json({
@@ -381,14 +372,9 @@ export const getPendingOrders = async (
   } catch (error: any) {
     console.error("Error in getPendingOrders:", error);
     
-    // Handle Prisma database connection errors
-    if (error?.code === "P1001" || error?.code === "P1000") {
-      res.status(503).json({
-        success: false,
-        error: "Database connection error",
-        details: "Cannot connect to database. Please check DATABASE_URL in .env file.",
-      });
-      return;
+    // Handle database connection errors
+    if (handleDatabaseError(error, res)) {
+      return; // Error was handled
     }
     
     res.status(500).json({
@@ -458,14 +444,9 @@ export const getOrderById = async (
   } catch (error: any) {
     console.error("Error in getOrderById:", error);
     
-    // Handle Prisma database connection errors
-    if (error?.code === "P1001" || error?.code === "P1000") {
-      res.status(503).json({
-        success: false,
-        error: "Database connection error",
-        details: "Cannot connect to database. Please check DATABASE_URL in .env file.",
-      });
-      return;
+    // Handle database connection errors
+    if (handleDatabaseError(error, res)) {
+      return; // Error was handled
     }
     
     res.status(500).json({
